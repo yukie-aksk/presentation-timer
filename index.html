@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プレゼンタイマー</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #003087;
+      color: #eee;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.5s;
+    }
+
+    body.warning { background: #5c1010; }
+    body.finished { background: #0a3d1f; }
+
+    .timer-display {
+      font-size: clamp(6rem, 22vw, 18rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      text-shadow: 0 0 60px rgba(255,255,255,0.15);
+      transition: color 0.5s, text-shadow 0.5s;
+      line-height: 1;
+      user-select: none;
+    }
+
+    body.warning .timer-display {
+      color: #ff6b6b;
+      text-shadow: 0 0 80px rgba(255, 107, 107, 0.4);
+    }
+
+    body.finished .timer-display {
+      color: #69db7c;
+      text-shadow: 0 0 80px rgba(105, 219, 124, 0.4);
+    }
+
+    .status-label {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      height: 1.4em;
+      transition: color 0.5s;
+    }
+
+    body.warning .status-label { color: rgba(255, 107, 107, 0.7); }
+    body.finished .status-label { color: rgba(105, 219, 124, 0.7); }
+
+    .controls {
+      margin-top: 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .time-setter {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .time-setter label {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.05em;
+    }
+
+    .time-setter input[type="number"] {
+      width: 5rem;
+      padding: 0.45rem 0.6rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-align: center;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .time-setter input[type="number"]:focus {
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .time-setter input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+
+    .buttons {
+      display: flex;
+      gap: 0.8rem;
+    }
+
+    button {
+      padding: 0.6rem 1.8rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    button:active { transform: scale(0.96); }
+
+    #btn-start {
+      background: rgba(255,255,255,0.9);
+      color: #003087;
+    }
+
+    #btn-start:hover { background: #fff; }
+
+    #btn-reset {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    #btn-reset:hover { background: rgba(255,255,255,0.16); }
+
+    .hint {
+      margin-top: 2.5rem;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="timer-display" id="display">00:00</div>
+  <div class="status-label" id="status"></div>
+
+  <div class="controls">
+    <div class="time-setter">
+      <label for="minutes">分数を設定</label>
+      <input type="number" id="minutes" value="5" min="1" max="999">
+      <label>分</label>
+    </div>
+    <div class="buttons">
+      <button id="btn-start">スタート</button>
+      <button id="btn-reset">リセット</button>
+    </div>
+  </div>
+
+  <div class="hint">スペースキーでスタート / 一時停止</div>
+
+<script>
+  const display   = document.getElementById('display');
+  const status    = document.getElementById('status');
+  const btnStart  = document.getElementById('btn-start');
+  const btnReset  = document.getElementById('btn-reset');
+  const minutesEl = document.getElementById('minutes');
+
+  let totalSeconds  = 0;
+  let remaining     = 0;
+  let timerId       = null;
+  let running       = false;
+  let warningSounded = false;
+
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function beep(frequency, duration, type = 'sine', volume = 0.6) {
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  function playWarningSound() {
+    // 短いビープ×3
+    beep(880, 0.15, 'sine', 0.5);
+    setTimeout(() => beep(880, 0.15, 'sine', 0.5), 220);
+    setTimeout(() => beep(880, 0.15, 'sine', 0.5), 440);
+  }
+
+  function playFinishedSound() {
+    // 上昇するチャイム
+    beep(523, 0.25, 'sine', 0.5);
+    setTimeout(() => beep(659, 0.25, 'sine', 0.5), 280);
+    setTimeout(() => beep(784, 0.25, 'sine', 0.5), 560);
+    setTimeout(() => beep(1047, 0.5, 'sine', 0.5), 840);
+  }
+
+  function fmt(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+
+  function setBodyState(state) {
+    document.body.classList.remove('warning', 'finished');
+    if (state) document.body.classList.add(state);
+  }
+
+  function updateDisplay() {
+    display.textContent = fmt(remaining);
+
+    if (remaining === 0 && totalSeconds > 0) {
+      setBodyState('finished');
+      status.textContent = '終了';
+      playFinishedSound();
+    } else if (remaining <= 60 && remaining > 0) {
+      if (!warningSounded) {
+        warningSounded = true;
+        playWarningSound();
+      }
+      setBodyState('warning');
+      status.textContent = '残り1分';
+    } else {
+      setBodyState(null);
+      status.textContent = running ? '進行中' : '';
+    }
+  }
+
+  function start() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (remaining === 0) {
+      totalSeconds = parseInt(minutesEl.value, 10) * 60 || 0;
+      if (totalSeconds <= 0) return;
+      remaining = totalSeconds;
+      warningSounded = false;
+    }
+    running = true;
+    btnStart.textContent = '一時停止';
+    status.textContent = '進行中';
+
+    timerId = setInterval(() => {
+      remaining--;
+      updateDisplay();
+      if (remaining <= 0) {
+        clearInterval(timerId);
+        timerId = null;
+        running = false;
+        btnStart.textContent = 'スタート';
+      }
+    }, 1000);
+  }
+
+  function pause() {
+    clearInterval(timerId);
+    timerId = null;
+    running = false;
+    btnStart.textContent = 'スタート';
+    status.textContent = '一時停止中';
+  }
+
+  function reset() {
+    clearInterval(timerId);
+    timerId = null;
+    running = false;
+    totalSeconds = 0;
+    remaining = 0;
+    warningSounded = false;
+    display.textContent = '00:00';
+    status.textContent = '';
+    btnStart.textContent = 'スタート';
+    setBodyState(null);
+  }
+
+  btnStart.addEventListener('click', () => {
+    if (running) pause(); else start();
+  });
+
+  btnReset.addEventListener('click', reset);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && e.target === document.body) {
+      e.preventDefault();
+      if (running) pause(); else start();
+    }
+  });
+
+  minutesEl.addEventListener('change', () => {
+    if (!running && remaining === 0) {
+      display.textContent = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
+    }
+  });
+
+  // 初期表示
+  display.textContent = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
+</script>
+</body>
+</html>
