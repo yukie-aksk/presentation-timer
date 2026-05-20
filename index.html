@@ -16,13 +16,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: background 0.5s;
+      transition: background 0.4s;
       overflow: hidden;
     }
 
-    body.warning { background: #5c1010; }
+    body.warning  { background: #5c1010; }
     body.finished { background: #0a3d1f; }
 
+    /* ── 通常モード ── */
     .timer-display {
       font-size: clamp(6rem, 22vw, 18rem);
       font-weight: 700;
@@ -30,20 +31,13 @@
       letter-spacing: -0.02em;
       color: #ffffff;
       text-shadow: 0 0 60px rgba(255,255,255,0.15);
-      transition: color 0.5s, text-shadow 0.5s, font-size 0.3s;
       line-height: 1;
       user-select: none;
+      transition: color 0.4s, text-shadow 0.4s;
     }
 
-    body.warning .timer-display {
-      color: #ff6b6b;
-      text-shadow: 0 0 80px rgba(255, 107, 107, 0.4);
-    }
-
-    body.finished .timer-display {
-      color: #69db7c;
-      text-shadow: 0 0 80px rgba(105, 219, 124, 0.4);
-    }
+    body.warning  .timer-display { color: #ff6b6b; text-shadow: 0 0 80px rgba(255,107,107,0.4); }
+    body.finished .timer-display { color: #69db7c; text-shadow: 0 0 80px rgba(105,219,124,0.4); }
 
     .status-label {
       margin-top: 1rem;
@@ -52,11 +46,11 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.4);
       height: 1.4em;
-      transition: color 0.5s, opacity 0.3s;
+      transition: color 0.4s;
     }
 
-    body.warning .status-label { color: rgba(255, 107, 107, 0.7); }
-    body.finished .status-label { color: rgba(105, 219, 124, 0.7); }
+    body.warning  .status-label { color: rgba(255,107,107,0.7); }
+    body.finished .status-label { color: rgba(105,219,124,0.7); }
 
     .controls {
       margin-top: 3rem;
@@ -64,9 +58,6 @@
       flex-direction: column;
       align-items: center;
       gap: 1.2rem;
-      transition: opacity 0.3s, max-height 0.3s;
-      max-height: 200px;
-      overflow: hidden;
     }
 
     .time-setter {
@@ -95,16 +86,10 @@
       transition: border-color 0.2s;
     }
 
-    .time-setter input[type="number"]:focus {
-      border-color: rgba(255,255,255,0.4);
-    }
-
+    .time-setter input[type="number"]:focus { border-color: rgba(255,255,255,0.4); }
     .time-setter input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
 
-    .buttons {
-      display: flex;
-      gap: 0.8rem;
-    }
+    .buttons { display: flex; gap: 0.8rem; }
 
     button {
       padding: 0.6rem 1.8rem;
@@ -114,16 +99,12 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s;
+      transition: transform 0.1s, opacity 0.2s, background 0.2s;
     }
 
     button:active { transform: scale(0.96); }
 
-    #btn-start {
-      background: rgba(255,255,255,0.9);
-      color: #003087;
-    }
-
+    #btn-start { background: rgba(255,255,255,0.9); color: #003087; }
     #btn-start:hover { background: #fff; }
 
     #btn-reset {
@@ -131,7 +112,6 @@
       color: rgba(255,255,255,0.7);
       border: 1px solid rgba(255,255,255,0.15);
     }
-
     #btn-reset:hover { background: rgba(255,255,255,0.16); }
 
     .hint {
@@ -139,87 +119,140 @@
       font-size: 0.78rem;
       color: rgba(255,255,255,0.2);
       letter-spacing: 0.04em;
-      transition: opacity 0.3s;
     }
 
-    /* 最小化ボタン */
+    /* 最小化ボタン（通常時） */
     #btn-minimize {
       position: fixed;
       top: 12px;
       right: 14px;
-      padding: 0;
-      width: 28px;
-      height: 28px;
+      padding: 4px 10px;
       background: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.2);
       border-radius: 6px;
-      color: rgba(255,255,255,0.6);
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: rgba(255,255,255,0.55);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
       z-index: 100;
-      letter-spacing: 0;
+    }
+    #btn-minimize:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* ── ミニバーモード ── */
+    .mini-bar {
+      display: none;
+      position: fixed;
+      inset: 0;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px 0 14px;
+      gap: 8px;
     }
 
-    #btn-minimize:hover {
-      background: rgba(255,255,255,0.2);
+    .mini-time {
+      font-size: 1.55rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
       color: #fff;
+      white-space: nowrap;
+      user-select: none;
     }
 
-    #btn-minimize:active { transform: scale(0.92); }
+    body.warning  .mini-time { color: #ff6b6b; }
+    body.finished .mini-time { color: #69db7c; }
 
-    /* コンパクトモード */
-    body.compact .timer-display {
-      font-size: clamp(3rem, 18vw, 8rem);
+    .mini-controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
     }
 
-    body.compact .status-label {
-      font-size: 0.85rem;
-      margin-top: 0.4rem;
+    .mini-btn {
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      letter-spacing: 0.03em;
     }
 
-    body.compact .controls {
-      opacity: 0;
-      max-height: 0;
-      pointer-events: none;
+    #mini-start {
+      background: rgba(255,255,255,0.85);
+      color: #003087;
     }
+    #mini-start:hover { background: #fff; }
 
-    body.compact .hint {
-      opacity: 0;
-      pointer-events: none;
+    #mini-reset {
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.15);
     }
+    #mini-reset:hover { background: rgba(255,255,255,0.2); }
+
+    #mini-expand {
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 13px;
+      padding: 2px 7px;
+    }
+    #mini-expand:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* ミニバー有効時 */
+    body.mini .main-ui    { display: none; }
+    body.mini .mini-bar   { display: flex; }
+    body.mini #btn-minimize { display: none; }
   </style>
 </head>
 <body>
 
-  <button id="btn-minimize" title="コンパクト表示">⊖</button>
+  <button id="btn-minimize">⊟ 最小化</button>
 
-  <div class="timer-display" id="display">00:00</div>
-  <div class="status-label" id="status"></div>
+  <!-- 通常UI -->
+  <div class="main-ui" style="display:contents">
+    <div class="timer-display" id="display">00:00</div>
+    <div class="status-label" id="status"></div>
 
-  <div class="controls">
-    <div class="time-setter">
-      <label for="minutes">分数を設定</label>
-      <input type="number" id="minutes" value="5" min="1" max="999">
-      <label>分</label>
+    <div class="controls">
+      <div class="time-setter">
+        <label for="minutes">分数を設定</label>
+        <input type="number" id="minutes" value="5" min="1" max="999">
+        <label>分</label>
+      </div>
+      <div class="buttons">
+        <button id="btn-start">スタート</button>
+        <button id="btn-reset">リセット</button>
+      </div>
     </div>
-    <div class="buttons">
-      <button id="btn-start">スタート</button>
-      <button id="btn-reset">リセット</button>
+
+    <div class="hint">スペースキーでスタート / 一時停止　　Mキーで最小化</div>
+  </div>
+
+  <!-- ミニバー -->
+  <div class="mini-bar">
+    <div class="mini-time" id="mini-display">00:00</div>
+    <div class="mini-controls">
+      <button class="mini-btn" id="mini-start">▶</button>
+      <button class="mini-btn" id="mini-reset">↺</button>
+      <button class="mini-btn" id="mini-expand">⊞</button>
     </div>
   </div>
 
-  <div class="hint">スペースキーでスタート / 一時停止</div>
-
 <script>
   const display      = document.getElementById('display');
+  const miniDisplay  = document.getElementById('mini-display');
   const status       = document.getElementById('status');
   const btnStart     = document.getElementById('btn-start');
   const btnReset     = document.getElementById('btn-reset');
   const btnMinimize  = document.getElementById('btn-minimize');
+  const miniStart    = document.getElementById('mini-start');
+  const miniReset    = document.getElementById('mini-reset');
+  const miniExpand   = document.getElementById('mini-expand');
   const minutesEl    = document.getElementById('minutes');
 
   let totalSeconds   = 0;
@@ -227,21 +260,20 @@
   let timerId        = null;
   let running        = false;
   let warningSounded = false;
-  let compact        = false;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-  function beep(frequency, duration, type = 'sine', volume = 0.6) {
+  function beep(freq, dur, type = 'sine', vol = 0.6) {
     const osc  = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     osc.type = type;
-    osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
     osc.start(audioCtx.currentTime);
-    osc.stop(audioCtx.currentTime + duration);
+    osc.stop(audioCtx.currentTime + dur);
   }
 
   function playWarningSound() {
@@ -254,7 +286,7 @@
     beep(523, 0.25, 'sine', 0.5);
     setTimeout(() => beep(659, 0.25, 'sine', 0.5), 280);
     setTimeout(() => beep(784, 0.25, 'sine', 0.5), 560);
-    setTimeout(() => beep(1047, 0.5,  'sine', 0.5), 840);
+    setTimeout(() => beep(1047, 0.5, 'sine', 0.5), 840);
   }
 
   function fmt(s) {
@@ -268,18 +300,21 @@
     if (state) document.body.classList.add(state);
   }
 
+  function syncMiniStart() {
+    miniStart.textContent = running ? '⏸' : '▶';
+  }
+
   function updateDisplay() {
-    display.textContent = fmt(remaining);
+    const t = fmt(remaining);
+    display.textContent     = t;
+    miniDisplay.textContent = t;
 
     if (remaining === 0 && totalSeconds > 0) {
       setBodyState('finished');
       status.textContent = '終了';
       playFinishedSound();
     } else if (remaining <= 60 && remaining > 0) {
-      if (!warningSounded) {
-        warningSounded = true;
-        playWarningSound();
-      }
+      if (!warningSounded) { warningSounded = true; playWarningSound(); }
       setBodyState('warning');
       status.textContent = '残り1分';
     } else {
@@ -299,6 +334,7 @@
     running = true;
     btnStart.textContent = '一時停止';
     status.textContent = '進行中';
+    syncMiniStart();
 
     timerId = setInterval(() => {
       remaining--;
@@ -308,6 +344,7 @@
         timerId = null;
         running = false;
         btnStart.textContent = 'スタート';
+        syncMiniStart();
       }
     }, 1000);
   }
@@ -318,6 +355,7 @@
     running = false;
     btnStart.textContent = 'スタート';
     status.textContent = '一時停止中';
+    syncMiniStart();
   }
 
   function reset() {
@@ -327,48 +365,50 @@
     totalSeconds = 0;
     remaining = 0;
     warningSounded = false;
-    display.textContent = '00:00';
+    const t = fmt(0);
+    display.textContent     = t;
+    miniDisplay.textContent = t;
     status.textContent = '';
     btnStart.textContent = 'スタート';
+    syncMiniStart();
     setBodyState(null);
   }
 
-  function toggleCompact() {
-    compact = !compact;
-    document.body.classList.toggle('compact', compact);
-    btnMinimize.textContent = compact ? '⊕' : '⊖';
-    btnMinimize.title = compact ? '通常表示' : 'コンパクト表示';
-    if (compact) {
-      try { window.resizeTo(360, 220); } catch(e) {}
-    } else {
-      try { window.resizeTo(800, 600); } catch(e) {}
-    }
+  function enterMini() {
+    document.body.classList.add('mini');
+    syncMiniStart();
+    try { window.resizeTo(280, 52); } catch(e) {}
   }
 
-  btnStart.addEventListener('click', () => {
-    if (running) pause(); else start();
-  });
+  function exitMini() {
+    document.body.classList.remove('mini');
+    try { window.resizeTo(800, 600); } catch(e) {}
+  }
 
-  btnReset.addEventListener('click', reset);
-  btnMinimize.addEventListener('click', toggleCompact);
+  btnStart.addEventListener('click',    () => { if (running) pause(); else start(); });
+  btnReset.addEventListener('click',    reset);
+  btnMinimize.addEventListener('click', enterMini);
+  miniStart.addEventListener('click',   () => { if (running) pause(); else start(); });
+  miniReset.addEventListener('click',   reset);
+  miniExpand.addEventListener('click',  exitMini);
 
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && e.target === document.body) {
-      e.preventDefault();
-      if (running) pause(); else start();
-    }
-    if (e.code === 'KeyM' && e.target === document.body) {
-      toggleCompact();
-    }
+    if (e.target !== document.body) return;
+    if (e.code === 'Space') { e.preventDefault(); if (running) pause(); else start(); }
+    if (e.code === 'KeyM')  { document.body.classList.contains('mini') ? exitMini() : enterMini(); }
   });
 
   minutesEl.addEventListener('change', () => {
     if (!running && remaining === 0) {
-      display.textContent = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
+      const t = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
+      display.textContent     = t;
+      miniDisplay.textContent = t;
     }
   });
 
-  display.textContent = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
+  const init = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
+  display.textContent     = init;
+  miniDisplay.textContent = init;
 </script>
 </body>
 </html>
