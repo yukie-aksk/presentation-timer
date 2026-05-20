@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <title>プレゼンタイマー</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,7 +47,6 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.4);
       height: 1.4em;
-      transition: color 0.4s;
     }
 
     body.warning  .status-label { color: rgba(255,107,107,0.7); }
@@ -69,7 +69,6 @@
     .time-setter label {
       font-size: 0.95rem;
       color: rgba(255,255,255,0.5);
-      letter-spacing: 0.05em;
     }
 
     .time-setter input[type="number"] {
@@ -83,7 +82,6 @@
       border-radius: 8px;
       color: #fff;
       outline: none;
-      transition: border-color 0.2s;
     }
 
     .time-setter input[type="number"]:focus { border-color: rgba(255,255,255,0.4); }
@@ -95,11 +93,10 @@
       padding: 0.6rem 1.8rem;
       font-size: 0.95rem;
       font-weight: 600;
-      letter-spacing: 0.06em;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s, background 0.2s;
+      transition: transform 0.1s, opacity 0.2s;
     }
 
     button:active { transform: scale(0.96); }
@@ -112,16 +109,13 @@
       color: rgba(255,255,255,0.7);
       border: 1px solid rgba(255,255,255,0.15);
     }
-    #btn-reset:hover { background: rgba(255,255,255,0.16); }
 
     .hint {
       margin-top: 2.5rem;
       font-size: 0.78rem;
       color: rgba(255,255,255,0.2);
-      letter-spacing: 0.04em;
     }
 
-    /* 最小化ボタン（通常時） */
     #btn-minimize {
       position: fixed;
       top: 12px;
@@ -133,32 +127,37 @@
       color: rgba(255,255,255,0.55);
       font-size: 11px;
       font-weight: 500;
-      letter-spacing: 0.04em;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
       z-index: 100;
     }
-    #btn-minimize:hover { background: rgba(255,255,255,0.2); color: #fff; }
 
     /* ── ミニバーモード ── */
+    /* ウィンドウ全体を塗りつぶし、左上にバーを固定表示 */
     .mini-bar {
       display: none;
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      width: 189px;
+      height: 38px;
       align-items: center;
       justify-content: space-between;
-      padding: 0 4px 0 7px;
+      padding: 0 4px 0 8px;
       gap: 3px;
+      /* ウィンドウが189×38より大きい場合でも枠線で範囲を示す */
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      border-right: 1px solid rgba(255,255,255,0.15);
     }
 
     .mini-time {
-      font-size: 0.82rem;
+      font-size: 13px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.01em;
       color: #fff;
       white-space: nowrap;
       user-select: none;
+      line-height: 1;
     }
 
     body.warning  .mini-time { color: #ff6b6b; }
@@ -172,38 +171,32 @@
     }
 
     .mini-btn {
-      padding: 1px 5px;
+      padding: 1px 6px;
       font-size: 9px;
-      font-weight: 600;
+      font-weight: 700;
       border: none;
       border-radius: 3px;
       cursor: pointer;
-      letter-spacing: 0.02em;
+      line-height: 16px;
+      height: 18px;
     }
 
-    #mini-start {
-      background: rgba(255,255,255,0.85);
-      color: #003087;
-    }
+    #mini-start { background: rgba(255,255,255,0.9); color: #003087; }
     #mini-start:hover { background: #fff; }
 
     #mini-reset {
-      background: rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.7);
-      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.2);
     }
-    #mini-reset:hover { background: rgba(255,255,255,0.2); }
 
     #mini-expand {
-      background: rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.7);
-      border: 1px solid rgba(255,255,255,0.15);
-      font-size: 9px;
-      padding: 1px 4px;
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 1px 5px;
     }
-    #mini-expand:hover { background: rgba(255,255,255,0.2); color: #fff; }
 
-    /* ミニバー有効時 */
     body.mini .main-ui    { display: none; }
     body.mini .mini-bar   { display: flex; }
     body.mini #btn-minimize { display: none; }
@@ -213,11 +206,9 @@
 
   <button id="btn-minimize">⊟ 最小化</button>
 
-  <!-- 通常UI -->
   <div class="main-ui" style="display:contents">
     <div class="timer-display" id="display">00:00</div>
     <div class="status-label" id="status"></div>
-
     <div class="controls">
       <div class="time-setter">
         <label for="minutes">分数を設定</label>
@@ -229,11 +220,9 @@
         <button id="btn-reset">リセット</button>
       </div>
     </div>
-
     <div class="hint">スペースキーでスタート / 一時停止　　Mキーで最小化</div>
   </div>
 
-  <!-- ミニバー -->
   <div class="mini-bar">
     <div class="mini-time" id="mini-display">00:00</div>
     <div class="mini-controls">
@@ -244,16 +233,16 @@
   </div>
 
 <script>
-  const display      = document.getElementById('display');
-  const miniDisplay  = document.getElementById('mini-display');
-  const status       = document.getElementById('status');
-  const btnStart     = document.getElementById('btn-start');
-  const btnReset     = document.getElementById('btn-reset');
-  const btnMinimize  = document.getElementById('btn-minimize');
-  const miniStart    = document.getElementById('mini-start');
-  const miniReset    = document.getElementById('mini-reset');
-  const miniExpand   = document.getElementById('mini-expand');
-  const minutesEl    = document.getElementById('minutes');
+  const display     = document.getElementById('display');
+  const miniDisplay = document.getElementById('mini-display');
+  const status      = document.getElementById('status');
+  const btnStart    = document.getElementById('btn-start');
+  const btnReset    = document.getElementById('btn-reset');
+  const btnMinimize = document.getElementById('btn-minimize');
+  const miniStart   = document.getElementById('mini-start');
+  const miniReset   = document.getElementById('mini-reset');
+  const miniExpand  = document.getElementById('mini-expand');
+  const minutesEl   = document.getElementById('minutes');
 
   let totalSeconds   = 0;
   let remaining      = 0;
@@ -263,12 +252,11 @@
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-  function beep(freq, dur, type = 'sine', vol = 0.6) {
+  function beep(freq, dur, vol = 0.5) {
     const osc  = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.type = type;
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
     gain.gain.setValueAtTime(vol, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
@@ -276,23 +264,16 @@
     osc.stop(audioCtx.currentTime + dur);
   }
 
-  function playWarningSound() {
-    beep(880, 0.15, 'sine', 0.5);
-    setTimeout(() => beep(880, 0.15, 'sine', 0.5), 220);
-    setTimeout(() => beep(880, 0.15, 'sine', 0.5), 440);
+  function playWarning()  {
+    beep(880, 0.15); setTimeout(() => beep(880, 0.15), 220); setTimeout(() => beep(880, 0.15), 440);
   }
-
-  function playFinishedSound() {
-    beep(523, 0.25, 'sine', 0.5);
-    setTimeout(() => beep(659, 0.25, 'sine', 0.5), 280);
-    setTimeout(() => beep(784, 0.25, 'sine', 0.5), 560);
-    setTimeout(() => beep(1047, 0.5, 'sine', 0.5), 840);
+  function playFinished() {
+    beep(523, 0.25); setTimeout(() => beep(659, 0.25), 280);
+    setTimeout(() => beep(784, 0.25), 560); setTimeout(() => beep(1047, 0.5), 840);
   }
 
   function fmt(s) {
-    const m   = Math.floor(s / 60).toString().padStart(2, '0');
-    const sec = (s % 60).toString().padStart(2, '0');
-    return `${m}:${sec}`;
+    return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
   }
 
   function setBodyState(state) {
@@ -300,26 +281,19 @@
     if (state) document.body.classList.add(state);
   }
 
-  function syncMiniStart() {
-    miniStart.textContent = running ? '⏸' : '▶';
-  }
+  function syncMiniStart() { miniStart.textContent = running ? '⏸' : '▶'; }
 
   function updateDisplay() {
     const t = fmt(remaining);
     display.textContent     = t;
     miniDisplay.textContent = t;
-
     if (remaining === 0 && totalSeconds > 0) {
-      setBodyState('finished');
-      status.textContent = '終了';
-      playFinishedSound();
+      setBodyState('finished'); status.textContent = '終了'; playFinished();
     } else if (remaining <= 60 && remaining > 0) {
-      if (!warningSounded) { warningSounded = true; playWarningSound(); }
-      setBodyState('warning');
-      status.textContent = '残り1分';
+      if (!warningSounded) { warningSounded = true; playWarning(); }
+      setBodyState('warning'); status.textContent = '残り1分';
     } else {
-      setBodyState(null);
-      status.textContent = running ? '進行中' : '';
+      setBodyState(null); status.textContent = running ? '進行中' : '';
     }
   }
 
@@ -335,43 +309,28 @@
     btnStart.textContent = '一時停止';
     status.textContent = '進行中';
     syncMiniStart();
-
     timerId = setInterval(() => {
       remaining--;
       updateDisplay();
       if (remaining <= 0) {
-        clearInterval(timerId);
-        timerId = null;
-        running = false;
-        btnStart.textContent = 'スタート';
-        syncMiniStart();
+        clearInterval(timerId); timerId = null;
+        running = false; btnStart.textContent = 'スタート'; syncMiniStart();
       }
     }, 1000);
   }
 
   function pause() {
-    clearInterval(timerId);
-    timerId = null;
-    running = false;
-    btnStart.textContent = 'スタート';
-    status.textContent = '一時停止中';
-    syncMiniStart();
+    clearInterval(timerId); timerId = null;
+    running = false; btnStart.textContent = 'スタート';
+    status.textContent = '一時停止中'; syncMiniStart();
   }
 
   function reset() {
-    clearInterval(timerId);
-    timerId = null;
-    running = false;
-    totalSeconds = 0;
-    remaining = 0;
-    warningSounded = false;
-    const t = fmt(0);
-    display.textContent     = t;
-    miniDisplay.textContent = t;
-    status.textContent = '';
-    btnStart.textContent = 'スタート';
-    syncMiniStart();
-    setBodyState(null);
+    clearInterval(timerId); timerId = null;
+    running = false; totalSeconds = 0; remaining = 0; warningSounded = false;
+    display.textContent = miniDisplay.textContent = fmt(0);
+    status.textContent = ''; btnStart.textContent = 'スタート';
+    syncMiniStart(); setBodyState(null);
   }
 
   function enterMini() {
@@ -385,30 +344,27 @@
     try { window.resizeTo(800, 600); } catch(e) {}
   }
 
-  btnStart.addEventListener('click',    () => { if (running) pause(); else start(); });
+  btnStart.addEventListener('click',    () => running ? pause() : start());
   btnReset.addEventListener('click',    reset);
   btnMinimize.addEventListener('click', enterMini);
-  miniStart.addEventListener('click',   () => { if (running) pause(); else start(); });
+  miniStart.addEventListener('click',   () => running ? pause() : start());
   miniReset.addEventListener('click',   reset);
   miniExpand.addEventListener('click',  exitMini);
 
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', e => {
     if (e.target !== document.body) return;
-    if (e.code === 'Space') { e.preventDefault(); if (running) pause(); else start(); }
+    if (e.code === 'Space') { e.preventDefault(); running ? pause() : start(); }
     if (e.code === 'KeyM')  { document.body.classList.contains('mini') ? exitMini() : enterMini(); }
   });
 
   minutesEl.addEventListener('change', () => {
     if (!running && remaining === 0) {
-      const t = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
-      display.textContent     = t;
-      miniDisplay.textContent = t;
+      display.textContent = miniDisplay.textContent = fmt((parseInt(minutesEl.value,10)||0)*60);
     }
   });
 
-  const init = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
-  display.textContent     = init;
-  miniDisplay.textContent = init;
+  const init = fmt((parseInt(minutesEl.value,10)||0)*60);
+  display.textContent = miniDisplay.textContent = init;
 </script>
 </body>
 </html>
