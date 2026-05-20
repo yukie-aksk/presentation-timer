@@ -17,6 +17,7 @@
       align-items: center;
       justify-content: center;
       transition: background 0.5s;
+      overflow: hidden;
     }
 
     body.warning { background: #5c1010; }
@@ -29,7 +30,7 @@
       letter-spacing: -0.02em;
       color: #ffffff;
       text-shadow: 0 0 60px rgba(255,255,255,0.15);
-      transition: color 0.5s, text-shadow 0.5s;
+      transition: color 0.5s, text-shadow 0.5s, font-size 0.3s;
       line-height: 1;
       user-select: none;
     }
@@ -51,7 +52,7 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.4);
       height: 1.4em;
-      transition: color 0.5s;
+      transition: color 0.5s, opacity 0.3s;
     }
 
     body.warning .status-label { color: rgba(255, 107, 107, 0.7); }
@@ -63,6 +64,9 @@
       flex-direction: column;
       align-items: center;
       gap: 1.2rem;
+      transition: opacity 0.3s, max-height 0.3s;
+      max-height: 200px;
+      overflow: hidden;
     }
 
     .time-setter {
@@ -135,10 +139,63 @@
       font-size: 0.78rem;
       color: rgba(255,255,255,0.2);
       letter-spacing: 0.04em;
+      transition: opacity 0.3s;
+    }
+
+    /* 最小化ボタン */
+    #btn-minimize {
+      position: fixed;
+      top: 12px;
+      right: 14px;
+      padding: 0;
+      width: 28px;
+      height: 28px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      color: rgba(255,255,255,0.6);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      z-index: 100;
+      letter-spacing: 0;
+    }
+
+    #btn-minimize:hover {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    #btn-minimize:active { transform: scale(0.92); }
+
+    /* コンパクトモード */
+    body.compact .timer-display {
+      font-size: clamp(3rem, 18vw, 8rem);
+    }
+
+    body.compact .status-label {
+      font-size: 0.85rem;
+      margin-top: 0.4rem;
+    }
+
+    body.compact .controls {
+      opacity: 0;
+      max-height: 0;
+      pointer-events: none;
+    }
+
+    body.compact .hint {
+      opacity: 0;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
+
+  <button id="btn-minimize" title="コンパクト表示">⊖</button>
 
   <div class="timer-display" id="display">00:00</div>
   <div class="status-label" id="status"></div>
@@ -158,17 +215,19 @@
   <div class="hint">スペースキーでスタート / 一時停止</div>
 
 <script>
-  const display   = document.getElementById('display');
-  const status    = document.getElementById('status');
-  const btnStart  = document.getElementById('btn-start');
-  const btnReset  = document.getElementById('btn-reset');
-  const minutesEl = document.getElementById('minutes');
+  const display      = document.getElementById('display');
+  const status       = document.getElementById('status');
+  const btnStart     = document.getElementById('btn-start');
+  const btnReset     = document.getElementById('btn-reset');
+  const btnMinimize  = document.getElementById('btn-minimize');
+  const minutesEl    = document.getElementById('minutes');
 
-  let totalSeconds  = 0;
-  let remaining     = 0;
-  let timerId       = null;
-  let running       = false;
+  let totalSeconds   = 0;
+  let remaining      = 0;
+  let timerId        = null;
+  let running        = false;
   let warningSounded = false;
+  let compact        = false;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -186,22 +245,20 @@
   }
 
   function playWarningSound() {
-    // 短いビープ×3
     beep(880, 0.15, 'sine', 0.5);
     setTimeout(() => beep(880, 0.15, 'sine', 0.5), 220);
     setTimeout(() => beep(880, 0.15, 'sine', 0.5), 440);
   }
 
   function playFinishedSound() {
-    // 上昇するチャイム
     beep(523, 0.25, 'sine', 0.5);
     setTimeout(() => beep(659, 0.25, 'sine', 0.5), 280);
     setTimeout(() => beep(784, 0.25, 'sine', 0.5), 560);
-    setTimeout(() => beep(1047, 0.5, 'sine', 0.5), 840);
+    setTimeout(() => beep(1047, 0.5,  'sine', 0.5), 840);
   }
 
   function fmt(s) {
-    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const m   = Math.floor(s / 60).toString().padStart(2, '0');
     const sec = (s % 60).toString().padStart(2, '0');
     return `${m}:${sec}`;
   }
@@ -276,16 +333,32 @@
     setBodyState(null);
   }
 
+  function toggleCompact() {
+    compact = !compact;
+    document.body.classList.toggle('compact', compact);
+    btnMinimize.textContent = compact ? '⊕' : '⊖';
+    btnMinimize.title = compact ? '通常表示' : 'コンパクト表示';
+    if (compact) {
+      try { window.resizeTo(360, 220); } catch(e) {}
+    } else {
+      try { window.resizeTo(800, 600); } catch(e) {}
+    }
+  }
+
   btnStart.addEventListener('click', () => {
     if (running) pause(); else start();
   });
 
   btnReset.addEventListener('click', reset);
+  btnMinimize.addEventListener('click', toggleCompact);
 
   document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && e.target === document.body) {
       e.preventDefault();
       if (running) pause(); else start();
+    }
+    if (e.code === 'KeyM' && e.target === document.body) {
+      toggleCompact();
     }
   });
 
@@ -295,7 +368,6 @@
     }
   });
 
-  // 初期表示
   display.textContent = fmt((parseInt(minutesEl.value, 10) || 0) * 60);
 </script>
 </body>
